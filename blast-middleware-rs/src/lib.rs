@@ -3,6 +3,7 @@ use jni::JNIEnv;
 use libc::{fopen, FILE};
 use std::ffi::CString;
 use std::fs::metadata;
+use std::time::Instant;
 
 struct DecompressStats {
     input_size: i64,
@@ -75,6 +76,8 @@ fn decompress(input_file: &str, output_file: &str) -> Result<DecompressStats, St
     let c_output_file =
         CString::new(output_file).expect("Can not create native string to output_file.");
 
+    let start = Instant::now();
+
     let status = unsafe {
         let input = fopen(c_input_file.as_ptr(), rb_mode.as_ptr());
         let output = fopen(c_output_file.as_ptr(), wb_mode.as_ptr());
@@ -82,7 +85,7 @@ fn decompress(input_file: &str, output_file: &str) -> Result<DecompressStats, St
     };
 
     Ok(DecompressStats {
-        decompress_time: 42,
+        decompress_time: start.elapsed().as_millis() as i64,
         input_size: metadata(input_file)
             .expect("Can not access metadata of input_file")
             .len() as i64,

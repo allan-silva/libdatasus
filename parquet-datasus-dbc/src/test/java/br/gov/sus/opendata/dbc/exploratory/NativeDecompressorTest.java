@@ -17,7 +17,6 @@ public class NativeDecompressorTest {
         String dbcPath = getDbcPath();
         NativeDecompressor.DecompressStats stats = new NativeDecompressor.DecompressStats();
         NativeDecompressor.decompress(dbcPath, stats);
-        assertEquals(42, stats.getDecompressTime());
         assertTrue(stats.getOutputFileSize() > stats.getInputFileSize());
         assertEquals(dbcPath, stats.getInputFileName());
         assertEquals(dbcPath + ".dbf", stats.getOutputFileName());
@@ -30,7 +29,6 @@ public class NativeDecompressorTest {
         String dbfpath = dbcPath + ".dbf";
         NativeDecompressor.DecompressStats stats = new NativeDecompressor.DecompressStats();
         NativeDecompressor.decompressTo(dbcPath, dbfpath, stats);
-        assertEquals(42, stats.getDecompressTime());
         assertTrue(stats.getOutputFileSize() > stats.getInputFileSize());
         assertEquals(dbcPath, stats.getInputFileName());
         assertEquals(dbfpath, stats.getOutputFileName());
