@@ -1,0 +1,16 @@
+[package]
+name = "blast-middleware-rs"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+libc = "0.2.147"
+jni = "0.21.1"
+
+[lib]
+crate_type = ["cdylib"]
+
+[build-dependencies]
+cc = "1.0.82"
