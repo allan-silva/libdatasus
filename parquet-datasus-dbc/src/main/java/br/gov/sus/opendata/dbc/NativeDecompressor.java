@@ -1,9 +1,21 @@
 package br.gov.sus.opendata.dbc;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+
 public class NativeDecompressor {
+    private static final String PLATFORM = System.getProperty("os.name", "Linux");
 
     static {
-        System.loadLibrary("blast_middleware_rs");
+        try {
+            NativeLoader.load();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static native void decompress(String inputFile, DecompressStats decompressStats);
@@ -69,6 +81,45 @@ public class NativeDecompressor {
 
         public void setDecompressStatusCode(int decompressStatusCode) {
             this.decompressStatusCode = decompressStatusCode;
+        }
+    }
+
+    private static class NativeLoader {
+        private static void load() throws IOException {
+            if(!PLATFORM.equalsIgnoreCase("LINUX"))
+                throw new PlatformNotSupportedException();
+
+            String[] nativeLibs = extractLibs();
+            for (String lib : nativeLibs) {
+                System.load(lib);
+            }
+        }
+
+        private static String[] extractLibs() throws IOException {
+            File tempDir = Files.createTempDirectory("datasus-dbc").toFile();
+            tempDir.deleteOnExit();
+
+            File tempNativeLib = new File(tempDir, "libblast_middleware_rs.so");
+            tempNativeLib.deleteOnExit();
+
+            try(InputStream nativeLibResouce =
+                    Thread.currentThread()
+                            .getContextClassLoader()
+                            .getResourceAsStream("native/x86_64-unknown-linux-gnu/libblast_middleware_rs.so");
+                OutputStream nativeLibOutputStream = new FileOutputStream(tempNativeLib)){
+                assert nativeLibResouce != null;
+                nativeLibOutputStream.write(nativeLibResouce.readAllBytes());
+
+                String[] loadedLibs = new String[1];
+                loadedLibs[0] = tempNativeLib.getAbsolutePath();
+                return loadedLibs;
+            }
+        }
+
+        static class PlatformNotSupportedException extends Error {
+            PlatformNotSupportedException() {
+                super(PLATFORM + " platform is not supported. Do you want contribute? see: https://github.com/allan-silva/parquet-datasus/issues/1");
+            }
         }
     }
 }
