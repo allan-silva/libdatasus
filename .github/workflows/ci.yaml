@@ -12,7 +12,14 @@ permissions:
   pull-requests: read
 
 jobs:
+  build-native-bridge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Rust
+        run: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
   build:
+    needs: build-native-bridge
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
