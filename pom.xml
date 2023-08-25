@@ -9,7 +9,7 @@
     <version>1.0-SNAPSHOT</version>
     <modules>
         <module>libdatasus-dbc</module>
-        <module>libdatasus-dbf</module>
+        <module>libdatasus-parquet-dbf</module>
     </modules>
 
     <properties>
