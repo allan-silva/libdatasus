@@ -6,9 +6,13 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="libdatasus-parquet-dbf" />
         <module name="libdatasus-dbc" />
         <module name="parquet-datasus-dbf" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="libdatasus-dbf" target="17" />
+    </bytecodeTargetLevel>
   </component>
 </project>
