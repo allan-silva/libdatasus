@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class NativeDecompressorTest {
 
     @Test
-    public void explore() throws IOException {
+    public void decompress() throws IOException {
         String dbcPath = getDbcPath();
         NativeDecompressor.DecompressStats stats = new NativeDecompressor.DecompressStats();
         NativeDecompressor.decompress(dbcPath, stats);
@@ -24,7 +24,7 @@ public class NativeDecompressorTest {
     }
 
     @Test
-    public void exploreTo() throws IOException {
+    public void decompressTo() throws IOException {
         String dbcPath = getDbcPath();
         String dbfpath = dbcPath + ".dbf";
         NativeDecompressor.DecompressStats stats = new NativeDecompressor.DecompressStats();
