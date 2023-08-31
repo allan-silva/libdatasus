@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import br.gov.sus.opendata.dbf.parquet.DbfSchemaConverter.ParquetDefinition;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import org.apache.parquet.schema.LogicalTypeAnnotation;
@@ -16,6 +17,8 @@ import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName;
 import org.apache.parquet.schema.Type;
 import org.apache.parquet.schema.Type.Repetition;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class DbfSchemaConverterTest {
 
@@ -102,6 +105,46 @@ class DbfSchemaConverterTest {
                   assertEquals(
                       definition.getLogicalTypeAnnotation(), field.getLogicalTypeAnnotation());
                 }
+              });
+    }
+  }
+
+  private static List<String> datasusFilesSource() {
+    String directory = TestUtils.getResourcePath("dbf/exaustive");
+    return TestUtils.listDbf(directory);
+  }
+
+  @ParameterizedTest
+  @MethodSource("datasusFilesSource")
+  void datasusExaustiveSchemaTest(String dbfFile) throws IOException {
+    DbfSchemaConverter schemaConverter = new DbfSchemaConverter();
+    try (FileInputStream fis = new FileInputStream(dbfFile);
+        InternalDbfReader dbfReader = new InternalDbfReader(fis, "ExaustiveDatasusTest")) {
+      MessageType messageType = schemaConverter.convert(dbfReader.schema);
+      assertTrue(messageType.getFieldCount() > 0);
+
+      for (int id = 0; id < messageType.getFieldCount(); ++id) {
+        Type field = messageType.getFields().get(id);
+        assertEquals(Repetition.REQUIRED, field.getRepetition());
+        assertEquals(id, field.getId().intValue());
+        assertEquals(dbfReader.getField(id).getName(), field.getName());
+      }
+    }
+  }
+
+  @Test
+  void testError() throws IOException {
+    String dbc = TestUtils.getResourcePath("dbf/exaustive/CCSE0703.dbc");
+    String dbf = TestUtils.decompressDBC(Path.of(dbc));
+    DbfSchemaConverter schemaConverter = new DbfSchemaConverter();
+    try (FileInputStream fis = new FileInputStream(dbc);
+        InternalDbfReader dbfReader = new InternalDbfReader(fis, "ExaustiveDatasusTest")) {
+      MessageType messageType = schemaConverter.convert(dbfReader.schema);
+      messageType
+          .getFields()
+          .forEach(
+              field -> {
+                assertTrue(messageType.getFieldCount() > 0);
               });
     }
   }
