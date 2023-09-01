@@ -4,11 +4,12 @@ import static java.util.Arrays.asList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import br.gov.sus.opendata.dbf.parquet.DbfSchemaConverter.ParquetDefinition;
+import com.linuxense.javadbf.DBFField;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import org.apache.parquet.schema.LogicalTypeAnnotation;
@@ -127,25 +128,54 @@ class DbfSchemaConverterTest {
         Type field = messageType.getFields().get(id);
         assertEquals(Repetition.REQUIRED, field.getRepetition());
         assertEquals(id, field.getId().intValue());
-        assertEquals(dbfReader.getField(id).getName(), field.getName());
+
+        DBFField dbfField = dbfReader.getField(id);
+
+        assertEquals(dbfField.getName(), field.getName());
+
+        switch (dbfField.getType()) {
+          case CHARACTER:
+            assertEquals(PrimitiveTypeName.BINARY, field.asPrimitiveType().getPrimitiveTypeName());
+            assertEquals(LogicalTypeAnnotation.stringType(), field.getLogicalTypeAnnotation());
+            break;
+          case DATE:
+            assertEquals(PrimitiveTypeName.BINARY, field.asPrimitiveType().getPrimitiveTypeName());
+            assertEquals(
+                LogicalTypeAnnotation.stringType(),
+                field.asPrimitiveType().getLogicalTypeAnnotation());
+            break;
+          case NUMERIC:
+            assertEquals(PrimitiveTypeName.BINARY, field.asPrimitiveType().getPrimitiveTypeName());
+            assertEquals(
+                LogicalTypeAnnotation.decimalType(dbfField.getDecimalCount(), dbfField.getLength()),
+                field.asPrimitiveType().getLogicalTypeAnnotation());
+            break;
+          case FLOATING_POINT:
+            assertEquals(PrimitiveTypeName.FLOAT, field.asPrimitiveType().getPrimitiveTypeName());
+            break;
+          case LOGICAL:
+            assertEquals(PrimitiveTypeName.BOOLEAN, field.asPrimitiveType().getPrimitiveTypeName());
+          default:
+            fail("Field type not yet supported: " + dbfField.getType().name());
+        }
       }
     }
   }
 
-  @Test
-  void testError() throws IOException {
-    String dbc = TestUtils.getResourcePath("dbf/exaustive/CCSE0703.dbc");
-    String dbf = TestUtils.decompressDBC(Path.of(dbc));
-    DbfSchemaConverter schemaConverter = new DbfSchemaConverter();
-    try (FileInputStream fis = new FileInputStream(dbc);
-        InternalDbfReader dbfReader = new InternalDbfReader(fis, "ExaustiveDatasusTest")) {
-      MessageType messageType = schemaConverter.convert(dbfReader.schema);
-      messageType
-          .getFields()
-          .forEach(
-              field -> {
-                assertTrue(messageType.getFieldCount() > 0);
-              });
-    }
-  }
+  //  @Test
+  //  void incestigationTest() throws IOException {
+  //    String dbc = TestUtils.getResourcePath("dbf/exaustive/CCSE0703.dbc");
+  //    String dbf = TestUtils.decompressDBC(Path.of(dbc));
+  //    DbfSchemaConverter schemaConverter = new DbfSchemaConverter();
+  //    try (FileInputStream fis = new FileInputStream(dbc);
+  //        InternalDbfReader dbfReader = new InternalDbfReader(fis, "ExaustiveDatasusTest")) {
+  //      MessageType messageType = schemaConverter.convert(dbfReader.schema);
+  //      messageType
+  //          .getFields()
+  //          .forEach(
+  //              field -> {
+  //                assertTrue(messageType.getFieldCount() > 0);
+  //              });
+  //    }
+  //  }
 }

@@ -46,7 +46,7 @@ class DbfSchemaConverter {
         return ParquetDefinition.of(PrimitiveTypeName.BOOLEAN);
       default:
         throw new UnsupportedOperationException(
-            "Cannot convert DBF file: unknown type " + dbfField.getType().getCode());
+            "Cannot convert DBF file: unknown type " + dbfField.getType().name());
     }
   }
 
