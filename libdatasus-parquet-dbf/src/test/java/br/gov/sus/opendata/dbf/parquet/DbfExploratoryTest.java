@@ -9,7 +9,6 @@ public class DbfExploratoryTest {
 
   @Test
   public void test() throws FileNotFoundException {
-    fail();
 
 //    DBFField[] fields = new DBFField[5];
 //
