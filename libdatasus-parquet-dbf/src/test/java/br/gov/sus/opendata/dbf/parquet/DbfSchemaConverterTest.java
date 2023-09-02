@@ -139,9 +139,9 @@ class DbfSchemaConverterTest {
             assertEquals(LogicalTypeAnnotation.stringType(), field.getLogicalTypeAnnotation());
             break;
           case DATE:
-            assertEquals(PrimitiveTypeName.BINARY, field.asPrimitiveType().getPrimitiveTypeName());
+            assertEquals(PrimitiveTypeName.INT32, field.asPrimitiveType().getPrimitiveTypeName());
             assertEquals(
-                LogicalTypeAnnotation.stringType(),
+                LogicalTypeAnnotation.dateType(),
                 field.asPrimitiveType().getLogicalTypeAnnotation());
             break;
           case NUMERIC:
