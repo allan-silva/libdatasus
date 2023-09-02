@@ -19,6 +19,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>br.gov.sus.opendata</groupId>
+            <artifactId>libdatasus-dbc</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.github.albfernandez</groupId>
             <artifactId>javadbf</artifactId>
             <version>1.14.0</version>
@@ -29,5 +34,10 @@
             <version>1.13.1</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+            <version>3.3.5</version>
+        </dependency>
     </dependencies>
 </project>
