@@ -2,18 +2,14 @@ package br.gov.sus.opendata.dbf.parquet;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
-import com.linuxense.javadbf.DBFDataType;
-import com.linuxense.javadbf.DBFField;
-import com.linuxense.javadbf.DBFWriter;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.util.Date;
 import org.junit.jupiter.api.Test;
 
-public class DbfExploratory {
+public class DbfExploratoryTest {
 
   @Test
   public void test() throws FileNotFoundException {
+    fail();
 
 //    DBFField[] fields = new DBFField[5];
 //
