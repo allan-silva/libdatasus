@@ -3,10 +3,12 @@ package br.gov.sus.opendata.dbf.parquet;
 import static java.util.Arrays.asList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import br.gov.sus.opendata.dbf.parquet.DbfSchemaConverter.ParquetDefinition;
+import com.linuxense.javadbf.DBFException;
 import com.linuxense.javadbf.DBFField;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -162,20 +164,20 @@ class DbfSchemaConverterTest {
     }
   }
 
-  //  @Test
-  //  void incestigationTest() throws IOException {
-  //    String dbc = TestUtils.getResourcePath("dbf/exaustive/CCSE0703.dbc");
-  //    String dbf = TestUtils.decompressDBC(Path.of(dbc));
-  //    DbfSchemaConverter schemaConverter = new DbfSchemaConverter();
-  //    try (FileInputStream fis = new FileInputStream(dbc);
-  //        InternalDbfReader dbfReader = new InternalDbfReader(fis, "ExaustiveDatasusTest")) {
-  //      MessageType messageType = schemaConverter.convert(dbfReader.schema);
-  //      messageType
-  //          .getFields()
-  //          .forEach(
-  //              field -> {
-  //                assertTrue(messageType.getFieldCount() > 0);
-  //              });
-  //    }
-  //  }
+  private static List<String> underInvestigationDatasusFilesSource() {
+    String directory = TestUtils.getResourcePath("dbf/investigating");
+    return TestUtils.listDbf(directory);
+  }
+
+  @ParameterizedTest
+  @MethodSource("underInvestigationDatasusFilesSource")
+  void investigationTest(String dbfFile) throws IOException {
+    assertThrows(DBFException.class, () -> {
+      DbfSchemaConverter schemaConverter = new DbfSchemaConverter();
+      try (FileInputStream fis = new FileInputStream(dbfFile);
+          InternalDbfReader dbfReader = new InternalDbfReader(fis, "ExaustiveDatasusTest")) {
+        fail("No exception thrown");
+      }
+    });
+  }
 }
