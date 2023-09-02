@@ -11,3 +11,6 @@ Por se tratar de um projeto de TCC em andamenteo, esse repo não está aceitando
 Descompressor de arquivos DBC baseado no trabalho de Mark Adler <madler@alumni.caltech.edu> (zlib), Daniela Petruzalek ([blast-dbf](https://github.com/eaglebh/blast-dbf)) e Pablo Fonseca ([blast-dbf](https://github.com/eaglebh/blast-dbf)).
 
 Leitor de arquivos DBF utiliza a biblioteca [JavaDBF](https://github.com/albfernandez/javadbf) de Alberto Fernández
+
+# Problemas conhecidos
+https://github.com/allan-silva/libdatasus/issues
