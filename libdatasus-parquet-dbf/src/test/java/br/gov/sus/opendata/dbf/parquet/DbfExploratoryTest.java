@@ -2,7 +2,13 @@ package br.gov.sus.opendata.dbf.parquet;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
+import com.linuxense.javadbf.DBFDataType;
+import com.linuxense.javadbf.DBFField;
+import com.linuxense.javadbf.DBFWriter;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.math.BigDecimal;
+import java.util.Date;
 import org.junit.jupiter.api.Test;
 
 public class DbfExploratoryTest {
@@ -42,7 +48,7 @@ public class DbfExploratoryTest {
 //
 //    Object[] rowData = new Object[5];
 //    rowData[0] = "abcdefghij";
-//    rowData[1] = 42.024D;
+//    rowData[1] = BigDecimal.valueOf(42.024D);
 //    rowData[2] = new Date(2023,1,30);
 //    rowData[3] = 240.42f;
 //    rowData[4] = true;
