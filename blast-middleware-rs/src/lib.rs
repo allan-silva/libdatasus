@@ -38,7 +38,7 @@ struct DecompressStats {
 }
 
 #[no_mangle]
-pub extern "system" fn Java_br_gov_sus_opendata_dbc_NativeDecompressor_decompress<'local>(
+pub extern "system" fn Java_br_gov_sus_opendata_dbc_DbcNativeDecompressor_decompress<'local>(
     mut env: JNIEnv<'local>,
     _class: JClass<'local>,
     input_file: JString<'local>,
@@ -63,7 +63,7 @@ pub extern "system" fn Java_br_gov_sus_opendata_dbc_NativeDecompressor_decompres
 }
 
 #[no_mangle]
-pub extern "system" fn Java_br_gov_sus_opendata_dbc_NativeDecompressor_decompressTo<'local>(
+pub extern "system" fn Java_br_gov_sus_opendata_dbc_DbcNativeDecompressor_decompressTo<'local>(
     mut env: JNIEnv<'local>,
     _class: JClass<'local>,
     input_file: JString<'local>,

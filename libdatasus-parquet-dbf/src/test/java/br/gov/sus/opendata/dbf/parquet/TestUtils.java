@@ -1,7 +1,7 @@
 package br.gov.sus.opendata.dbf.parquet;
 
-import br.gov.sus.opendata.dbc.NativeDecompressor;
-import br.gov.sus.opendata.dbc.NativeDecompressor.DecompressStats;
+import br.gov.sus.opendata.dbc.DbcNativeDecompressor;
+import br.gov.sus.opendata.dbc.DbcNativeDecompressor.DecompressStats;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -47,7 +47,7 @@ public class TestUtils {
     Path outputFile = tmpDecompressPath.resolve(dbcPath.getFileName() + ".dbf");
     outputFile.toFile().deleteOnExit();
     DecompressStats stats = new DecompressStats();
-    NativeDecompressor.decompressTo(dbcPath.toString(), outputFile.toString(), stats);
+    DbcNativeDecompressor.decompressTo(dbcPath.toString(), outputFile.toString(), stats);
     return stats.getOutputFileName();
   }
 }
