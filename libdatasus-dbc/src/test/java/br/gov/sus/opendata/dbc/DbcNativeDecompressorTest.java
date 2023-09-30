@@ -42,11 +42,16 @@ public class DbcNativeDecompressorTest {
     String dbcPath = getDbcPath();
     List<DecompressStats> statsList = DbcNativeDecompressor.decompressFromDirectory(dbcDirPath);
     assertFalse(statsList.isEmpty());
+    assertEquals(2, statsList.size());
     DecompressStats stats = statsList.get(0);
     assertTrue(stats.getOutputFileSize() > stats.getInputFileSize());
     assertEquals(dbcPath, stats.getInputFileName());
     assertEquals(dbcPath + ".dbf", stats.getOutputFileName());
+
+    assertEquals(dbcDirPath + "POBR2023 (copy).dBc.dbf", statsList.get(1).getOutputFileName());
+
     Files.deleteIfExists(Paths.get(dbcPath + ".dbf"));
+    Files.deleteIfExists(Paths.get(dbcDirPath + "POBR2023 (copy).dBc.dbf"));
   }
 
   @Test
