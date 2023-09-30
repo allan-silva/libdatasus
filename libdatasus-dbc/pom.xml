@@ -79,6 +79,7 @@
                                 </goals>
                                 <configuration>
                                     <keyname>${gpg.keyname}</keyname>
+                                    <passphrase>${gpg.passphrase}</passphrase>
                                     <passphraseServerId>${gpg.keyname}</passphraseServerId>
                                 </configuration>
                             </execution>
