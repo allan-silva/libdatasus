@@ -4,9 +4,11 @@ import static java.util.Arrays.asList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import br.gov.sus.opendata.dbf.parquet.InternalDbfReader.DbfSchema;
 import com.linuxense.javadbf.DBFField;
 import com.linuxense.javadbf.DBFRow;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Arrays;
