@@ -112,7 +112,7 @@ class DbfSchemaConverterTest {
     }
   }
 
-  private static List<String> datasusFilesSource() {
+  private static List<String> datasusFilesSource() throws IOException {
     String directory = TestUtils.getResourcePath("dbf/exaustive");
     return TestUtils.listDbf(directory);
   }
@@ -164,7 +164,7 @@ class DbfSchemaConverterTest {
     }
   }
 
-  private static List<String> underInvestigationDatasusFilesSource() {
+  private static List<String> underInvestigationDatasusFilesSource() throws IOException {
     String directory = TestUtils.getResourcePath("dbf/investigating");
     return TestUtils.listDbf(directory);
   }

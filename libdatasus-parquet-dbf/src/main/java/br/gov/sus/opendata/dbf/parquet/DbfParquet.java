@@ -2,8 +2,11 @@ package br.gov.sus.opendata.dbf.parquet;
 
 import br.gov.sus.opendata.dbc.DbcNativeDecompressor;
 import br.gov.sus.opendata.dbf.parquet.InternalDbfReader.DbfSchema;
+import com.linuxense.javadbf.DBFException;
 import com.linuxense.javadbf.DBFField;
 import com.linuxense.javadbf.DBFRow;
+
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -17,201 +20,214 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
+
+import org.apache.parquet.column.ParquetProperties.WriterVersion;
 import org.apache.parquet.hadoop.ParquetWriter;
 
 public class DbfParquet {
 
-  private final Set<ConvertTask> convertTasks;
+    private final Set<ConvertTask> convertTasks;
 
-  private final boolean raiseError;
+    private final boolean raiseError;
 
-  private final Consumer<Object> onProgress;
+    private final Consumer<Object> onProgress;
 
-  private DbfParquet(Builder builder) {
-    this.convertTasks = builder.convertTasks;
-    this.raiseError = builder.raiseError;
-    this.onProgress = Optional.ofNullable(builder.onProgress).orElse(this::logProgress);
-  }
-
-  public void convert(Path input) throws IOException {
-    Path output = Path.of(input.toString() + ".parquet");
-    convert(input, output);
-  }
-
-  public void convert(Path input, Path output) throws IOException {
-    convertTasks.add(ConvertTask.builder().input(input).output(output).build());
-    convert();
-  }
-
-  public void convert() throws IOException {
-    for (ConvertTask convertTask : convertTasks) {
-      if (Files.isDirectory(convertTask.getInput())) {
-        convertFromDirectory(convertTask);
-        continue;
-      }
-      convertFile(convertTask);
-    }
-  }
-
-  private void convertFromDirectory(ConvertTask convertTask) throws IOException {
-    if (convertTask.combine()) {
-      convertCombining(convertTask);
-      return;
+    private DbfParquet(Builder builder) {
+        this.convertTasks = builder.convertTasks;
+        this.raiseError = builder.raiseError;
+        this.onProgress = Optional.ofNullable(builder.onProgress).orElse(this::logProgress);
     }
 
-    try (DirectoryStream<Path> directoryStream =
-        Files.newDirectoryStream(convertTask.getInput(), this::isSupportedFile)) {
-      for (Path input : directoryStream) {
-        convertFile(input, convertTask.getOutput(), convertTask.getSchemaName());
-      }
+    public void convert(Path input) throws IOException {
+        Path output = Path.of(input.toString() + ".parquet");
+        convert(input, output);
     }
-  }
 
-  private void convertCombining(ConvertTask convertTask) throws IOException {
-    List<InternalDbfReader> readers = createReaders(convertTask);
-    if (readers.isEmpty()) return;
-
-    String schemaName =
-        Optional.ofNullable(convertTask.getSchemaName()).orElse(DbfSchema.DEFAULT_SCHEMA_NAME);
-    DbfSchema combinedSchema = createCombinedSchema(readers, schemaName);
-
-    try (ParquetWriter<DBFRow> parquetWriter =
-        DbfParquetWriter.builder(convertTask.getOutput().toString())
-            .withDbfSchema(combinedSchema)
-            .build()) {
-
-      for (InternalDbfReader reader : readers) {
-        write(reader, parquetWriter);
-      }
+    public void convert(Path input, Path output) throws IOException {
+        convertTasks.add(ConvertTask.builder().input(input).output(output).build());
+        convert();
     }
-  }
 
-  private DbfSchema createCombinedSchema(List<InternalDbfReader> readers, String schemaName) {
-    LinkedHashMap<String, DBFField> fields = new LinkedHashMap<>();
+    public void convert() throws IOException {
+        for (ConvertTask convertTask : convertTasks) {
+            if (Files.isDirectory(convertTask.getInput())) {
+                convertFromDirectory(convertTask);
+                continue;
+            }
+            convertFile(convertTask);
+        }
+    }
 
-    for (InternalDbfReader reader : readers) {
-      for (DBFField dbfField : reader.schema.fields) {
-        if (fields.containsKey(dbfField.getName())) {
-          // TODO: Log
-          continue;
+    private void convertFromDirectory(ConvertTask convertTask) throws IOException {
+        if (convertTask.combine()) {
+            convertCombining(convertTask);
+            return;
         }
 
-        fields.put(dbfField.getName(), dbfField);
-      }
+        try (DirectoryStream<Path> directoryStream =
+                     Files.newDirectoryStream(convertTask.getInput(), this::isSupportedFile)) {
+            for (Path input : directoryStream) {
+                convertFile(input, convertTask.getOutput(), convertTask.getSchemaName());
+            }
+        }
     }
 
-    return DbfSchema.of(schemaName, fields.values().toArray(DBFField[]::new));
-  }
+    private void convertCombining(ConvertTask convertTask) throws IOException {
+        List<InternalDbfReader> readers = createReaders(convertTask);
+        if (readers.isEmpty()) return;
 
-  private List<InternalDbfReader> createReaders(ConvertTask convertTask) throws IOException {
-    List<InternalDbfReader> readers = new ArrayList<>();
+        String schemaName =
+                Optional.ofNullable(convertTask.getSchemaName()).orElse(DbfSchema.DEFAULT_SCHEMA_NAME);
+        DbfSchema combinedSchema = createCombinedSchema(readers, schemaName);
 
-    try (DirectoryStream<Path> directoryStream =
-        Files.newDirectoryStream(convertTask.getInput(), this::isSupportedFile)) {
+        try (ParquetWriter<DBFRow> parquetWriter =
+                     DbfParquetWriter.builder(convertTask.getOutput().toString())
+                             .withDbfSchema(combinedSchema)
+                             .build()) {
 
-      for (Path input : directoryStream) {
-        readers.add(
-            new InternalDbfReader(
-                new FileInputStream(getInputFile(input)), convertTask.getSchemaName()));
-      }
+            for (InternalDbfReader reader : readers) {
+                write(reader, parquetWriter);
+            }
+        }
     }
 
-    return readers;
-  }
+    private DbfSchema createCombinedSchema(List<InternalDbfReader> readers, String schemaName) {
+        LinkedHashMap<String, DBFField> fields = new LinkedHashMap<>();
 
-  private void convertFile(ConvertTask convertTask) throws IOException {
-    convertFile(convertTask.getInput(), convertTask.getOutput(), convertTask.getSchemaName());
-  }
+        for (InternalDbfReader reader : readers) {
+            for (DBFField dbfField : reader.schema.fields) {
+                if (fields.containsKey(dbfField.getName())) {
+                    // TODO: Log
+                    continue;
+                }
 
-  private void convertFile(Path input, Path output, String schemaName) throws IOException {
-    try (FileInputStream fis = new FileInputStream(getInputFile(input));
-        InternalDbfReader dbfReader = new InternalDbfReader(fis, schemaName);
-        ParquetWriter<DBFRow> parquetWriter =
-            DbfParquetWriter.builder(output.toString()).withDbfSchema(dbfReader.schema).build()) {
-      write(dbfReader, parquetWriter);
-    }
-  }
+                fields.put(dbfField.getName(), dbfField);
+            }
+        }
 
-  private File getInputFile(Path input) {
-    if (isCompressed(input)) {
-      return Path.of(DbcNativeDecompressor.decompress(input).getOutputFileName()).toFile();
-    }
-    return input.toFile();
-  }
-
-  private void write(InternalDbfReader dbfReader, ParquetWriter<DBFRow> parquetWriter)
-      throws IOException {
-    DBFRow dbfRow;
-
-    while ((dbfRow = dbfReader.nextRow()) != null) {
-      parquetWriter.write(dbfRow);
-    }
-  }
-
-  private ParquetWriter<DBFRow> createParquetWriter(Path output, DbfSchema dbfSchema)
-      throws IOException {
-    return DbfParquetWriter.builder(output.toString()).withDbfSchema(dbfSchema).build();
-  }
-
-  private boolean isCompressed(Path path) {
-    String sPath = path.toString().toLowerCase();
-    return sPath.endsWith(".dbc");
-  }
-
-  private boolean isSupportedFile(Path path) {
-    String sPath = path.toString().toLowerCase();
-    return Files.isRegularFile(path) && (sPath.endsWith(".dbc") || sPath.endsWith(".dbf"));
-  }
-
-  private void logProgress(Object o) {}
-
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  public static class Builder {
-
-    private final Set<ConvertTask> convertTasks = new HashSet<>();
-
-    private boolean raiseError = true;
-
-    private Consumer<Object> onProgress;
-
-    public Builder addConvertItem(String source) {
-      return addConvertItem(Path.of(source));
+        return DbfSchema.of(schemaName, fields.values().toArray(DBFField[]::new));
     }
 
-    public Builder addConvertItem(String source, String destination) {
-      return addConvertItem(Path.of(source), Path.of(destination));
+    private List<InternalDbfReader> createReaders(ConvertTask convertTask) throws IOException {
+        List<InternalDbfReader> readers = new ArrayList<>();
+
+        try (DirectoryStream<Path> directoryStream =
+                     Files.newDirectoryStream(convertTask.getInput(), this::isSupportedFile)) {
+
+            for (Path input : directoryStream) {
+                readers.add(
+                        new InternalDbfReader(
+                                new FileInputStream(getInputFile(input)), convertTask.getSchemaName()));
+            }
+        }
+
+        return readers;
     }
 
-    public Builder addConvertItem(Path source) {
-      addConvertItem(ConvertTask.builder().input(source).build());
-      return this;
+    private void convertFile(ConvertTask convertTask) throws IOException {
+        convertFile(convertTask.getInput(), convertTask.getOutput(), convertTask.getSchemaName());
     }
 
-    public Builder addConvertItem(Path source, Path destination) {
-      addConvertItem(ConvertTask.builder().input(source).output(destination).build());
-      return this;
+    private void convertFile(Path input, Path output, String schemaName) throws IOException {
+        try (FileInputStream fis = new FileInputStream(getInputFile(input));
+             InternalDbfReader dbfReader = new InternalDbfReader(fis, schemaName);
+             ParquetWriter<DBFRow> parquetWriter =
+                     DbfParquetWriter.builder(output.toString()).withDbfSchema(dbfReader.schema).withWriterVersion(WriterVersion.PARQUET_2_0).build()) {
+            write(dbfReader, parquetWriter);
+        }
     }
 
-    public Builder addConvertItem(ConvertTask convertTask) {
-      this.convertTasks.add(convertTask);
-      return this;
+    private File getInputFile(Path input) {
+        if (isCompressed(input)) {
+            return Path.of(DbcNativeDecompressor.decompress(input).getOutputFileName()).toFile();
+        }
+        return input.toFile();
     }
 
-    public Builder raiseError(boolean val) {
-      this.raiseError = val;
-      return this;
+    private void write(InternalDbfReader dbfReader, ParquetWriter<DBFRow> parquetWriter)
+            throws IOException {
+
+        DBFRow dbfRow = nextRow(dbfReader);
+        int rowCount = 0;
+
+        while (dbfRow != null) {
+            parquetWriter.write(dbfRow);
+            ++rowCount;
+            dbfRow = nextRow(dbfReader);
+        }
     }
 
-    public Builder onProgress(Consumer<Object> onProgress) {
-      this.onProgress = onProgress;
-      return this;
+    private DBFRow nextRow(InternalDbfReader dbfReader) {
+        try {
+            return dbfReader.nextRow();
+        } catch (DBFException dbfException) {
+            if (dbfException.getCause() instanceof EOFException) {
+                return null;
+            }
+            throw dbfException;
+        }
     }
 
-    public DbfParquet build() {
-      return new DbfParquet(this);
+    private boolean isCompressed(Path path) {
+        String sPath = path.toString().toLowerCase();
+        return sPath.endsWith(".dbc");
     }
-  }
+
+    private boolean isSupportedFile(Path path) {
+        String sPath = path.toString().toLowerCase();
+        return Files.isRegularFile(path) && (sPath.endsWith(".dbc") || sPath.endsWith(".dbf"));
+    }
+
+    private void logProgress(Object o) {
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+
+        private final Set<ConvertTask> convertTasks = new HashSet<>();
+
+        private boolean raiseError = true;
+
+        private Consumer<Object> onProgress;
+
+        public Builder addConvertItem(String source) {
+            return addConvertItem(Path.of(source));
+        }
+
+        public Builder addConvertItem(String source, String destination) {
+            return addConvertItem(Path.of(source), Path.of(destination));
+        }
+
+        public Builder addConvertItem(Path source) {
+            addConvertItem(ConvertTask.builder().input(source).build());
+            return this;
+        }
+
+        public Builder addConvertItem(Path source, Path destination) {
+            addConvertItem(ConvertTask.builder().input(source).output(destination).build());
+            return this;
+        }
+
+        public Builder addConvertItem(ConvertTask convertTask) {
+            this.convertTasks.add(convertTask);
+            return this;
+        }
+
+        public Builder raiseError(boolean val) {
+            this.raiseError = val;
+            return this;
+        }
+
+        public Builder onProgress(Consumer<Object> onProgress) {
+            this.onProgress = onProgress;
+            return this;
+        }
+
+        public DbfParquet build() {
+            return new DbfParquet(this);
+        }
+    }
 }

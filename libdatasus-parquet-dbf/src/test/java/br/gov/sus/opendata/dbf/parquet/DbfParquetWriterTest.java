@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.parquet.column.ParquetProperties.WriterVersion;
 import org.apache.parquet.hadoop.ParquetReader;
 import org.apache.parquet.hadoop.ParquetWriter;
 import org.apache.parquet.hadoop.util.HadoopInputFile;
@@ -26,7 +27,10 @@ class DbfParquetWriterTest {
     try (FileInputStream fis = new FileInputStream(dbfPath);
         InternalDbfReader dbfReader = new InternalDbfReader(fis);
         ParquetWriter<DBFRow> parquetWriter =
-            DbfParquetWriter.builder(parquetPath).withDbfSchema(dbfReader.schema).build()) {
+            DbfParquetWriter.builder(parquetPath)
+                .withDbfSchema(dbfReader.schema)
+                .withWriterVersion(WriterVersion.PARQUET_2_0)
+                .build()) {
       DBFRow dbfRow;
       if ((dbfRow = dbfReader.nextRow()) != null) {
         parquetWriter.write(dbfRow);

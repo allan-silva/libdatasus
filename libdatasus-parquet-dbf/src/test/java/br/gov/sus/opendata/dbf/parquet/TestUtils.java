@@ -9,19 +9,24 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
-import org.junit.jupiter.api.Test;
 
 public class TestUtils {
+
+  public static final String TEST_TEMP_DIR = "libdatasustesttempdir";
+
   public static String getResourcePath(String resourceName) {
     return TestUtils.class.getClassLoader().getResource(resourceName).getPath();
   }
 
-  public static List<String> listDbf(String directory) {
+  public static List<String> listDbf(String directory) throws IOException {
     File file = new File(directory);
     assert file.isDirectory();
 
     String[] files = file.list();
     assert files != null;
+
+    Path tmpDecompressPath = createTempDir();
+
     return Arrays.stream(files)
         .filter(
             fileName ->
@@ -32,7 +37,7 @@ public class TestUtils {
             path -> {
               if (path.toString().contains(".dbc")) {
                 try {
-                  return decompressDBC(path);
+                  return decompressDBC(path, tmpDecompressPath);
                 } catch (IOException e) {
                   throw new RuntimeException(e);
                 }
@@ -42,13 +47,17 @@ public class TestUtils {
         .toList();
   }
 
-  public static String decompressDBC(Path dbcPath) throws IOException {
-    Path tmpDecompressPath = Files.createTempDirectory("libdatasustesttempdir");
-    tmpDecompressPath.toFile().deleteOnExit();
+  public static String decompressDBC(Path dbcPath, Path tmpDecompressPath) throws IOException {
     Path outputFile = tmpDecompressPath.resolve(dbcPath.getFileName() + ".dbf");
     outputFile.toFile().deleteOnExit();
     DecompressStats stats = new DecompressStats();
     DbcNativeDecompressor.decompressTo(dbcPath.toString(), outputFile.toString(), stats);
     return stats.getOutputFileName();
+  }
+
+  public static Path createTempDir() throws IOException {
+    Path tmpDecompressPath = Files.createTempDirectory(TEST_TEMP_DIR);
+    tmpDecompressPath.toFile().deleteOnExit();
+    return tmpDecompressPath;
   }
 }
