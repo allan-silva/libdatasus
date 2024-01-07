@@ -25,6 +25,7 @@ import org.apache.parquet.column.ParquetProperties.WriterVersion;
 import org.apache.parquet.hadoop.ParquetWriter;
 
 public class DbfParquet {
+    private final static String EXTENSION = ".parquet";
 
     private final Set<ConvertTask> convertTasks;
 
@@ -39,7 +40,7 @@ public class DbfParquet {
     }
 
     public void convert(Path input) throws IOException {
-        Path output = Path.of(input.toString() + ".parquet");
+        Path output = Path.of(input.toString() + EXTENSION);
         convert(input, output);
     }
 
@@ -83,6 +84,7 @@ public class DbfParquet {
         try (ParquetWriter<DBFRow> parquetWriter =
                      DbfParquetWriter.builder(convertTask.getOutput().toString())
                              .withDbfSchema(combinedSchema)
+                             .withValidation(false)
                              .build()) {
 
             for (InternalDbfReader reader : readers) {
@@ -132,9 +134,19 @@ public class DbfParquet {
         try (FileInputStream fis = new FileInputStream(getInputFile(input));
              InternalDbfReader dbfReader = new InternalDbfReader(fis, schemaName);
              ParquetWriter<DBFRow> parquetWriter =
-                     DbfParquetWriter.builder(output.toString()).withDbfSchema(dbfReader.schema).withWriterVersion(WriterVersion.PARQUET_2_0).build()) {
+                     DbfParquetWriter.builder(getOutputPath(input, output).toString())
+                             .withDbfSchema(dbfReader.schema)
+                             .withWriterVersion(WriterVersion.PARQUET_2_0)
+                             .build()) {
             write(dbfReader, parquetWriter);
         }
+    }
+
+    private Path getOutputPath(Path input, Path output) {
+        if (Files.isDirectory(output)) {
+            return output.resolve(input.getFileName() + EXTENSION);
+        }
+        return output;
     }
 
     private File getInputFile(Path input) {

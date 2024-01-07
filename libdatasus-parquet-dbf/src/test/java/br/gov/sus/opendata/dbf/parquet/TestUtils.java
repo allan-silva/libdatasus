@@ -60,4 +60,8 @@ public class TestUtils {
     tmpDecompressPath.toFile().deleteOnExit();
     return tmpDecompressPath;
   }
+
+  public static boolean isCompressedFile(Path path) {
+    return path.toString().toLowerCase().endsWith(".dbc");
+  }
 }
