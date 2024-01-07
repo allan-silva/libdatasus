@@ -85,6 +85,11 @@ public class ConvertTask {
       return this;
     }
 
+    public Builder combineFiles() {
+      this.combine = true;
+      return this;
+    }
+
     public Builder decompressDbc(boolean decompressDbc) {
       this.decompressDbc = decompressDbc;
       return this;

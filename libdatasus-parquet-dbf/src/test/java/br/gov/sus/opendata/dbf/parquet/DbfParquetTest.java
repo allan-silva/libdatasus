@@ -117,13 +117,26 @@ class DbfParquetTest {
     }
 
     @Test
-    void convertDirectoryToDirectoryTest() {
+    void convertDirectoryCombiningTest() throws IOException {
+        Path directoryTestDir = Files.createDirectory(testDir.resolve("directoryCombining"));
+        Path directoryTestResourcesPath = Path.of(TestUtils.getResourcePath("dbf/conversion/directoryCombining"));
+        try (Stream<Path> files = Files.list(directoryTestResourcesPath)) {
+            for (Path filePath : files.toList()) {
+                Files.copy(filePath, directoryTestDir.resolve(filePath.getFileName()));
+            }
+        }
 
-    }
+        DbfParquet dbfParquet = DbfParquet.builder()
+                .addConvertItem(
+                        ConvertTask.builder()
+                                .input(directoryTestDir)
+                                .output(directoryTestDir.resolve("combined.parquet"))
+                                .combineFiles()
+                                .build())
+                .build();
+        dbfParquet.convert();
 
-    @Test
-    void convertDirectoryCombiningTest() {
-
+        Path p = Path.of("heu.p");
     }
 
     private void assertConvertedFile(Path dbfFile, Path parquetFile) throws IOException {

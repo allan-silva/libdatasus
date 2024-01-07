@@ -38,7 +38,10 @@ class InternalDbfReader extends DBFReader {
       }
     }
 
-    public DbfSchema(String name, DBFField[] fields) {}
+    public DbfSchema(String name, DBFField[] fields) {
+      this.name = name;
+      this.fields = fields;
+    }
 
     public static DbfSchema of(String name, DBFField[] fields) {
       return new DbfSchema(name, fields);
