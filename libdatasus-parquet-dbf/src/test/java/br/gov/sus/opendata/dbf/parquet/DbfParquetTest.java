@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -44,7 +45,7 @@ class DbfParquetTest {
     @MethodSource("datasusFilesSource")
     void convertFileToFileTest(Path inputPathItem) throws IOException {
         Path copyTarget = testDir.resolve(inputPathItem.getFileName());
-        Path inputFile = Files.copy(inputPathItem, copyTarget);
+        Path inputFile = Files.copy(inputPathItem, copyTarget, StandardCopyOption.REPLACE_EXISTING);
 
         DbfParquet dbfParquet = DbfParquet.builder().build();
         dbfParquet.convert(inputFile);
@@ -55,22 +56,14 @@ class DbfParquetTest {
         Path parquetFile = Path.of(inputFile.toString() + ".parquet");
         assertTrue(Files.exists(parquetFile));
 
-        Configuration config = new Configuration();
-        org.apache.hadoop.fs.Path hadoopPath = new org.apache.hadoop.fs.Path(parquetFile.toString());
-        InputFile hadoopInputFile = HadoopInputFile.fromPath(hadoopPath, config);
-
-        try (InternalDbfReader dbfReader = new InternalDbfReader(Files.newInputStream(dbfFile));
-             ParquetReader<Row> parquetReader = RowParquetReader.builder(hadoopInputFile).build()
-        ) {
-            assertConvertedFile(dbfReader, parquetReader);
-        }
+        assertConvertedFile(dbfFile, parquetFile);
     }
 
     @Test
     void convertFileToDirectoryTest() throws IOException {
         Path output = Files.createDirectory(testDir.resolve("output"));
         Path inputFile = Path.of(TestUtils.getResourcePath("dbf/conversion/exhaustive/CIHAAC1201.dbc"));
-        inputFile = Files.copy(inputFile, testDir.resolve(inputFile.getFileName()));
+        inputFile = Files.copy(inputFile, testDir.resolve(inputFile.getFileName()), StandardCopyOption.REPLACE_EXISTING);
 
         DbfParquet dbfParquet = DbfParquet.builder().build();
         dbfParquet.convert(inputFile, output);
@@ -81,20 +74,46 @@ class DbfParquetTest {
         Path parquetFile = output.resolve(inputFile.getFileName() + ".parquet");
         assertTrue(Files.exists(parquetFile));
 
-        Configuration config = new Configuration();
-        org.apache.hadoop.fs.Path hadoopPath = new org.apache.hadoop.fs.Path(parquetFile.toString());
-        InputFile hadoopInputFile = HadoopInputFile.fromPath(hadoopPath, config);
-
-        try (InternalDbfReader dbfReader = new InternalDbfReader(Files.newInputStream(dbfFile));
-             ParquetReader<Row> parquetReader = RowParquetReader.builder(hadoopInputFile).build()
-        ) {
-            assertConvertedFile(dbfReader, parquetReader);
-        }
+        assertConvertedFile(dbfFile, parquetFile);
     }
 
-    @Test
-    void convertDirectoryToFileTest() {
 
+    @Test
+    void convertDirectoryToFileTest() throws IOException {
+        Path directoryTestDir = Files.createDirectory(testDir.resolve("directory"));
+        Path directoryTestResourcesPath = Path.of(TestUtils.getResourcePath("dbf/conversion/directory"));
+        try (Stream<Path> files = Files.list(directoryTestResourcesPath)) {
+            for (Path filePath : files.toList()) {
+                Files.copy(filePath, directoryTestDir.resolve(filePath.getFileName()));
+            }
+        }
+
+        DbfParquet dbfParquet = DbfParquet.builder().build();
+        dbfParquet.convert(directoryTestDir);
+
+        assert (Files.exists(directoryTestDir.resolve("CIHAAM1104.dbc")));
+        assert (Files.exists(directoryTestDir.resolve("HBRS2104.dbc")));
+        assert (Files.exists(directoryTestDir.resolve("SRMS1205.dbc")));
+
+        Path dbfA = directoryTestDir.resolve("CIHAAM1104.dbc.dbf");
+        Path dbfB = directoryTestDir.resolve("HBRS2104.dbc.dbf");
+        Path dbfC = directoryTestDir.resolve("SRMS1205.dbc.dbf");
+
+        assert (Files.exists(dbfA));
+        assert (Files.exists(dbfB));
+        assert (Files.exists(dbfC));
+
+        Path parquetA = directoryTestDir.resolve("CIHAAM1104.dbc.parquet");
+        Path parquetB = directoryTestDir.resolve("HBRS2104.dbc.parquet");
+        Path parquetC = directoryTestDir.resolve("SRMS1205.dbc.parquet");
+
+        assert (Files.exists(parquetA));
+        assert (Files.exists(parquetB));
+        assert (Files.exists(parquetC));
+
+        assertConvertedFile(dbfA, parquetA);
+        assertConvertedFile(dbfB, parquetB);
+        assertConvertedFile(dbfC, parquetC);
     }
 
     @Test
@@ -105,6 +124,18 @@ class DbfParquetTest {
     @Test
     void convertDirectoryCombiningTest() {
 
+    }
+
+    private void assertConvertedFile(Path dbfFile, Path parquetFile) throws IOException {
+        Configuration config = new Configuration();
+        org.apache.hadoop.fs.Path hadoopPath = new org.apache.hadoop.fs.Path(parquetFile.toString());
+        InputFile hadoopInputFile = HadoopInputFile.fromPath(hadoopPath, config);
+
+        try (InternalDbfReader dbfReader = new InternalDbfReader(Files.newInputStream(dbfFile));
+             ParquetReader<Row> parquetReader = RowParquetReader.builder(hadoopInputFile).build()
+        ) {
+            assertConvertedFile(dbfReader, parquetReader);
+        }
     }
 
     private void assertConvertedFile(InternalDbfReader dbfReader, ParquetReader<Row> parquetReader) throws IOException {

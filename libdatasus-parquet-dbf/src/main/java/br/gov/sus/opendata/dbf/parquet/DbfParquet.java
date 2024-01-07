@@ -41,6 +41,11 @@ public class DbfParquet {
 
     public void convert(Path input) throws IOException {
         Path output = Path.of(input.toString() + EXTENSION);
+
+        if(Files.isDirectory(input)) {
+            output = input;
+        }
+
         convert(input, output);
     }
 
@@ -68,7 +73,7 @@ public class DbfParquet {
         try (DirectoryStream<Path> directoryStream =
                      Files.newDirectoryStream(convertTask.getInput(), this::isSupportedFile)) {
             for (Path input : directoryStream) {
-                convertFile(input, convertTask.getOutput(), convertTask.getSchemaName());
+                convertFile(input, convertTask.getOutput().resolve(input.getFileName() + EXTENSION), convertTask.getSchemaName());
             }
         }
     }
