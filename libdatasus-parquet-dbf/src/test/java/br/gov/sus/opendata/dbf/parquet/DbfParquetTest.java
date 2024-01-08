@@ -17,11 +17,16 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.EOFException;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -126,18 +131,29 @@ class DbfParquetTest {
             }
         }
 
-        DbfParquet dbfParquet = DbfParquet.builder()
+        Path parquetFile = directoryTestDir.resolve("combined.parquet");
+        DbfParquet dbfParquet = new DbfParquetCustomReaders(DbfParquet.builder()
                 .addConvertItem(
                         ConvertTask.builder()
                                 .input(directoryTestDir)
-                                .output(directoryTestDir.resolve("combined.parquet"))
+                                .output(parquetFile)
                                 .combineFiles()
-                                .build())
-                .build();
+                                .build()));
         dbfParquet.convert();
 
-        Path p = Path.of("heu.p");
+        Configuration config = new Configuration();
+        org.apache.hadoop.fs.Path hadoopPath = new org.apache.hadoop.fs.Path(parquetFile.toString());
+        InputFile hadoopInputFile = HadoopInputFile.fromPath(hadoopPath, config);
+
+        try(ParquetReader<Row> parquetReader = RowParquetReader.builder(hadoopInputFile).build()) {
+            List<InternalDbfReader> readers = DbfParquetCustomReaders.createReadersCombined(directoryTestDir);
+            for(InternalDbfReader dbfReader : readers) {
+                assertConvertedFile(dbfReader, parquetReader);
+            }
+        }
     }
+
+
 
     private void assertConvertedFile(Path dbfFile, Path parquetFile) throws IOException {
         Configuration config = new Configuration();
@@ -199,5 +215,34 @@ class DbfParquetTest {
             }
         }
         file.delete();
+    }
+
+    class DbfParquetCustomReaders extends DbfParquet {
+        private DbfParquetCustomReaders(DbfParquet.Builder builder) {
+            super(builder);
+        }
+
+        @Override
+        List<InternalDbfReader> createReaders(ConvertTask convertTask) throws IOException {
+            super.createReaders(convertTask);
+            return createReadersCombined(convertTask.getInput());
+        }
+
+        public static List<InternalDbfReader> createReadersCombined(Path directory) throws IOException {
+            List<InternalDbfReader> readers = new ArrayList<>();
+            readers.add(new InternalDbfReader(
+                    new FileInputStream(directory.resolve("CIHAAC1109.dbc.dbf").toFile()), "Combined"));
+            readers.add(new InternalDbfReader(
+                    new FileInputStream(directory.resolve("CIHAAC1112.dbc.dbf").toFile()), "Combined"));
+            readers.add(new InternalDbfReader(
+                    new FileInputStream(directory.resolve("CIHAAC1201.dbc.dbf").toFile()), "Combined"));
+            readers.add(new InternalDbfReader(
+                    new FileInputStream(directory.resolve("CIHAAL1203.dbc.dbf").toFile()), "Combined"));
+            readers.add(new InternalDbfReader(
+                    new FileInputStream(directory.resolve("CIHAMG2004.dbc.dbf").toFile()), "Combined"));
+            readers.add(new InternalDbfReader(
+                    new FileInputStream(directory.resolve("CIHASP2307.dbc.dbf").toFile()), "Combined"));
+            return readers;
+        }
     }
 }

@@ -33,7 +33,7 @@ public class DbfParquet {
 
     private final Consumer<Object> onProgress;
 
-    private DbfParquet(Builder builder) {
+    DbfParquet(Builder builder) {
         this.convertTasks = builder.convertTasks;
         this.raiseError = builder.raiseError;
         this.onProgress = Optional.ofNullable(builder.onProgress).orElse(this::logProgress);
@@ -115,7 +115,7 @@ public class DbfParquet {
         return DbfSchema.of(schemaName, fields.values().toArray(DBFField[]::new));
     }
 
-    private List<InternalDbfReader> createReaders(ConvertTask convertTask) throws IOException {
+    List<InternalDbfReader> createReaders(ConvertTask convertTask) throws IOException {
         List<InternalDbfReader> readers = new ArrayList<>();
 
         try (DirectoryStream<Path> directoryStream =
