@@ -24,6 +24,9 @@ import java.util.function.Consumer;
 import org.apache.parquet.column.ParquetProperties.WriterVersion;
 import org.apache.parquet.hadoop.ParquetWriter;
 
+/**
+ * {@link DbfParquet} converts a DBC/DBF file to parquet file.
+ */
 public class DbfParquet {
     private final static String EXTENSION = ".parquet";
 
@@ -36,6 +39,22 @@ public class DbfParquet {
         this.onProgress = Optional.ofNullable(builder.onProgress).orElse(this::logProgress);
     }
 
+    /**
+     * Converts the given input to parquet file.
+     * The result file will be auto named. E.g.:
+     * <pre>
+     *         Input file PNA1212.dbc
+     *         Results in PNA1212.dbc.parquet
+     * </pre>
+     *
+     * <pre>
+     *     Path inputFile = Path.of("file.dbc");
+     *     DbfParquet dbfParquet = DbfParquet.builder().build();
+     *     dbfParquet.convert(inputFile);
+     * </pre>
+     * @param input file or directory to be converted.
+     * @throws IOException
+     */
     public void convert(Path input) throws IOException {
         Path output = Path.of(input.toString() + EXTENSION);
 
@@ -46,11 +65,55 @@ public class DbfParquet {
         convert(input, output);
     }
 
+    /**
+     * Converts the given input to parquet file.
+     * If output is a directory the result file will be "file.dbc.parquet".
+     *
+     * <pre>
+     *     Path inputFile = Path.of("file.dbc");
+     *     Path outputFile = Path.of("converted.parquet");
+     *     DbfParquet dbfParquet = DbfParquet.builder().build();
+     *     dbfParquet.convert(inputFile, outputFile);
+     * </pre>
+     * @param input input file or directory.
+     * @param output output file or directory.
+     * @throws IOException
+     */
     public void convert(Path input, Path output) throws IOException {
         convertTasks.add(ConvertTask.builder().input(input).output(output).build());
         convert();
     }
 
+    /**
+     * Execute the list of conversion tasks.
+     * <pre>
+     *         ConvertTask simpleFileTask = ConvertTask.builder()
+     *                 .input(Path.of("/home/allan/teste/CIHADF1206.dbc"))
+     *                 .output(Path.of("/home/allan/teste/CIHADF1206.dbc.parquet"))
+     *                 .build();
+     *
+     *         ConvertTask convertFromDirectoryTask = ConvertTask.builder()
+     *                 .input(Path.of("/home/allan/teste/inputDirectory"))
+     *                 .output(Path.of("/home/allan/teste/outputDirectory"))
+     *                 .build();
+     *
+     *         ConvertTask convertCombiningTask =
+     *                 ConvertTask.builder()
+     *                         .input(Path.of("/home/allan/teste/inputDirectory"))
+     *                         .output(Path.of("/home/allan/teste/combined.parquet"))
+     *                         .combineFiles()
+     *                         .build();
+     *
+     *         DbfParquet dbfParquet = DbfParquet.builder()
+     *                 .addConvertItem(simpleFileTask)
+     *                 .addConvertItem(convertFromDirectoryTask)
+     *                 .addConvertItem(convertCombiningTask)
+     *                 .build();
+     *
+     *         dbfParquet.convert();
+     * </pre>
+     * @throws IOException
+     */
     public void convert() throws IOException {
         for (ConvertTask convertTask : convertTasks) {
             if (Files.isDirectory(convertTask.getInput())) {
