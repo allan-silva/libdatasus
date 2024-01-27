@@ -8,6 +8,7 @@ import java.util.Map;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.parquet.column.ParquetProperties.WriterVersion;
+import org.apache.parquet.hadoop.ParquetFileWriter;
 import org.apache.parquet.hadoop.ParquetWriter;
 import org.apache.parquet.hadoop.api.WriteSupport;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
@@ -84,6 +85,12 @@ public class DbfParquetWriter extends ParquetWriter<DBFRow> {
     @Override
     protected WriteSupport<DBFRow> getWriteSupport(Configuration configuration) {
       return new DbfRowWriteSupport(dbfSchema, extraMetaData);
+    }
+
+    @Override
+    public ParquetWriter<DBFRow> build() throws IOException {
+      withWriteMode(ParquetFileWriter.Mode.OVERWRITE);
+      return super.build();
     }
   }
 }

@@ -216,7 +216,9 @@ public class DbfParquet {
 
     private File getInputFile(Path input) {
         if (isCompressed(input)) {
-            return Path.of(DbcNativeDecompressor.decompress(input).getOutputFileName()).toFile();
+            File inputFile = Path.of(DbcNativeDecompressor.decompress(input).getOutputFileName()).toFile();
+            inputFile.deleteOnExit();
+            return inputFile;
         }
         return input.toFile();
     }
