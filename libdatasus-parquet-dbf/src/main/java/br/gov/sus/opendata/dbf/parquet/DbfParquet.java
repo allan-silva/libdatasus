@@ -29,13 +29,10 @@ public class DbfParquet {
 
     private final Set<ConvertTask> convertTasks;
 
-    private final boolean raiseError;
-
     private final Consumer<Object> onProgress;
 
     DbfParquet(Builder builder) {
         this.convertTasks = builder.convertTasks;
-        this.raiseError = builder.raiseError;
         this.onProgress = Optional.ofNullable(builder.onProgress).orElse(this::logProgress);
     }
 
@@ -206,8 +203,6 @@ public class DbfParquet {
 
         private final Set<ConvertTask> convertTasks = new HashSet<>();
 
-        private boolean raiseError = true;
-
         private Consumer<Object> onProgress;
 
         public Builder addConvertItem(String source) {
@@ -230,11 +225,6 @@ public class DbfParquet {
 
         public Builder addConvertItem(ConvertTask convertTask) {
             this.convertTasks.add(convertTask);
-            return this;
-        }
-
-        public Builder raiseError(boolean val) {
-            this.raiseError = val;
             return this;
         }
 
