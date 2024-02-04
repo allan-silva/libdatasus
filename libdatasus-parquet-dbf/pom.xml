@@ -6,7 +6,7 @@
     <parent>
         <groupId>br.dev.contrib.gov.sus.opendata</groupId>
         <artifactId>libdatasus</artifactId>
-        <version>1.0.1</version>
+        <version>1.0.2</version>
     </parent>
 
     <artifactId>libdatasus-parquet-dbf</artifactId>
@@ -15,7 +15,7 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <hadoop.version>3.3.5</hadoop.version>
+        <hadoop.version>3.3.6</hadoop.version>
         <parquet-mr.version>1.13.1</parquet-mr.version>
     </properties>
 
@@ -61,12 +61,6 @@
 
         <dependency>
             <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-mapreduce-client-core</artifactId>
-            <version>${hadoop.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
             <version>${hadoop.version}</version>
         </dependency>
@@ -81,6 +75,7 @@
             <groupId>com.exasol</groupId>
             <artifactId>parquet-io-java</artifactId>
             <version>2.0.4</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
