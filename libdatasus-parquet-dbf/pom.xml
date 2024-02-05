@@ -6,7 +6,7 @@
     <parent>
         <groupId>br.dev.contrib.gov.sus.opendata</groupId>
         <artifactId>libdatasus</artifactId>
-        <version>1.0.2</version>
+        <version>1.0.3</version>
     </parent>
 
     <artifactId>libdatasus-parquet-dbf</artifactId>
@@ -63,6 +63,7 @@
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
             <version>${hadoop.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>

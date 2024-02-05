@@ -6,7 +6,7 @@
 
     <groupId>br.dev.contrib.gov.sus.opendata</groupId>
     <artifactId>libdatasus</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
     <modules>
         <module>libdatasus-dbc</module>
         <module>libdatasus-parquet-dbf</module>
