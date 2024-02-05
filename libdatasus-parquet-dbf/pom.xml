@@ -6,14 +6,12 @@
     <parent>
         <groupId>br.dev.contrib.gov.sus.opendata</groupId>
         <artifactId>libdatasus</artifactId>
-        <version>1.0.3</version>
+        <version>1.0.4</version>
     </parent>
 
     <artifactId>libdatasus-parquet-dbf</artifactId>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <hadoop.version>3.3.6</hadoop.version>
         <parquet-mr.version>1.13.1</parquet-mr.version>

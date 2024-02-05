@@ -14,6 +14,8 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
+
 import org.junit.jupiter.api.Test;
 
 class InternalDbfReaderTest {
@@ -79,7 +81,7 @@ class InternalDbfReaderTest {
             "DT_DIAG",
             "DT_TRAT",
             "DT_NASC");
-    List<String> dbfFields = Arrays.stream(dbfReader.schema.fields).map(DBFField::getName).toList();
+    List<String> dbfFields = Arrays.stream(dbfReader.schema.fields).map(DBFField::getName).collect(Collectors.toList());
     expectedFields.forEach(expectedField -> assertTrue(dbfFields.contains(expectedField)));
   }
 

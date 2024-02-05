@@ -6,14 +6,12 @@
     <parent>
         <groupId>br.dev.contrib.gov.sus.opendata</groupId>
         <artifactId>libdatasus</artifactId>
-        <version>1.0.3</version>
+        <version>1.0.4</version>
     </parent>
 
     <artifactId>libdatasus-dbc</artifactId>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -108,8 +106,4 @@
             <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
         </repository>
     </distributionManagement>
-
-    <!-- Helpers -->
-    <!--    mvn versions:set -DnewVersion=1.2.3-->
-    <!--    mvn clean deploy -P release-->
 </project>

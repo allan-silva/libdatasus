@@ -6,7 +6,7 @@
 
     <groupId>br.dev.contrib.gov.sus.opendata</groupId>
     <artifactId>libdatasus</artifactId>
-    <version>1.0.3</version>
+    <version>1.0.4</version>
     <modules>
         <module>libdatasus-dbc</module>
         <module>libdatasus-parquet-dbf</module>
@@ -31,8 +31,8 @@
         </developer>
     </developers>
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -144,3 +144,7 @@
         </repository>
     </distributionManagement>
 </project>
+
+        <!-- Helpers -->
+        <!--    mvn versions:set -DnewVersion=1.2.3-->
+        <!--    mvn clean deploy -P release-->

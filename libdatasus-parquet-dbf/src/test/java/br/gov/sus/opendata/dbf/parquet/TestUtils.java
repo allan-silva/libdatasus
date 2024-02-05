@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class TestUtils {
 
@@ -44,7 +45,7 @@ public class TestUtils {
               }
               return path.toString();
             })
-        .toList();
+            .collect(Collectors.toList());
   }
 
   public static String decompressDBC(Path dbcPath, Path tmpDecompressPath) throws IOException {
