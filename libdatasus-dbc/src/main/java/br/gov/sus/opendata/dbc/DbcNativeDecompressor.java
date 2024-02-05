@@ -311,7 +311,7 @@ public class DbcNativeDecompressor {
                   .getContextClassLoader()
                   .getResourceAsStream(
                       "native/x86_64-unknown-linux-gnu/libblast_middleware_rs.so");
-          OutputStream nativeLibOutputStream = new FileOutputStream(tempNativeLib)) {
+          OutputStream nativeLibOutputStream = Files.newOutputStream(tempNativeLib.toPath())) {
         assert nativeLibResouce != null;
         nativeLibOutputStream.write(nativeLibResouce.readAllBytes());
 

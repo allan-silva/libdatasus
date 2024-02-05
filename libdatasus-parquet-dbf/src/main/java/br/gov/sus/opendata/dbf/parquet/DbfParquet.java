@@ -6,13 +6,11 @@ import com.linuxense.javadbf.DBFException;
 import com.linuxense.javadbf.DBFField;
 import com.linuxense.javadbf.DBFRow;
 
-import java.io.EOFException;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -52,13 +50,14 @@ public class DbfParquet {
      *     DbfParquet dbfParquet = DbfParquet.builder().build();
      *     dbfParquet.convert(inputFile);
      * </pre>
+     *
      * @param input file or directory to be converted.
      * @throws IOException
      */
     public void convert(Path input) throws IOException {
         Path output = Path.of(input.toString() + EXTENSION);
 
-        if(Files.isDirectory(input)) {
+        if (Files.isDirectory(input)) {
             output = input;
         }
 
@@ -75,7 +74,8 @@ public class DbfParquet {
      *     DbfParquet dbfParquet = DbfParquet.builder().build();
      *     dbfParquet.convert(inputFile, outputFile);
      * </pre>
-     * @param input input file or directory.
+     *
+     * @param input  input file or directory.
      * @param output output file or directory.
      * @throws IOException
      */
@@ -112,6 +112,7 @@ public class DbfParquet {
      *
      *         dbfParquet.convert();
      * </pre>
+     *
      * @throws IOException
      */
     public void convert() throws IOException {
@@ -184,7 +185,7 @@ public class DbfParquet {
             for (Path input : directoryStream) {
                 readers.add(
                         new InternalDbfReader(
-                                new FileInputStream(getInputFile(input)), convertTask.getSchemaName()));
+                                getInputStream(input), convertTask.getSchemaName()));
             }
         }
 
@@ -196,8 +197,8 @@ public class DbfParquet {
     }
 
     private void convertFile(Path input, Path output, String schemaName) throws IOException {
-        try (FileInputStream fis = new FileInputStream(getInputFile(input));
-             InternalDbfReader dbfReader = new InternalDbfReader(fis, schemaName);
+        try (InputStream inputStream = getInputStream(input);
+             InternalDbfReader dbfReader = new InternalDbfReader(inputStream, schemaName);
              ParquetWriter<DBFRow> parquetWriter =
                      DbfParquetWriter.builder(getOutputPath(input, output).toString())
                              .withDbfSchema(dbfReader.schema)
@@ -214,13 +215,13 @@ public class DbfParquet {
         return output;
     }
 
-    private File getInputFile(Path input) {
+    private InputStream getInputStream(Path input) throws IOException {
         if (isCompressed(input)) {
-            File inputFile = Path.of(DbcNativeDecompressor.decompress(input).getOutputFileName()).toFile();
-            inputFile.deleteOnExit();
-            return inputFile;
+            Path inputFilePath = Paths.get(DbcNativeDecompressor.decompress(input).getOutputFileName());
+            inputFilePath.toFile().deleteOnExit();
+            return Files.newInputStream(inputFilePath);
         }
-        return input.toFile();
+        return Files.newInputStream(input);
     }
 
     private void write(InternalDbfReader dbfReader, ParquetWriter<DBFRow> parquetWriter)

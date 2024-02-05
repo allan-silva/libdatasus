@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -82,79 +83,77 @@ class DbfParquetTest {
 
         assertConvertedFile(dbfFile, parquetFile);
     }
-//
-//
-//    @Test
-//    void convertDirectoryToFileTest() throws IOException {
-//        Path directoryTestDir = Files.createDirectory(testDir.resolve("directory"));
-//        Path directoryTestResourcesPath = Path.of(TestUtils.getResourcePath("dbf/conversion/directory"));
-//        try (Stream<Path> files = Files.list(directoryTestResourcesPath)) {
-//            for (Path filePath : files.toList()) {
-//                Files.copy(filePath, directoryTestDir.resolve(filePath.getFileName()));
-//            }
-//        }
-//
-//        DbfParquet dbfParquet = DbfParquet.builder().build();
-//        dbfParquet.convert(directoryTestDir);
-//
-//        assert (Files.exists(directoryTestDir.resolve("CIHAAM1104.dbc")));
-//        assert (Files.exists(directoryTestDir.resolve("HBRS2104.dbc")));
-//        assert (Files.exists(directoryTestDir.resolve("SRMS1205.dbc")));
-//
-//        Path dbfA = directoryTestDir.resolve("CIHAAM1104.dbc.dbf");
-//        Path dbfB = directoryTestDir.resolve("HBRS2104.dbc.dbf");
-//        Path dbfC = directoryTestDir.resolve("SRMS1205.dbc.dbf");
-//
-//        assert (Files.exists(dbfA));
-//        assert (Files.exists(dbfB));
-//        assert (Files.exists(dbfC));
-//
-//        Path parquetA = directoryTestDir.resolve("CIHAAM1104.dbc.parquet");
-//        Path parquetB = directoryTestDir.resolve("HBRS2104.dbc.parquet");
-//        Path parquetC = directoryTestDir.resolve("SRMS1205.dbc.parquet");
-//
-//        assert (Files.exists(parquetA));
-//        assert (Files.exists(parquetB));
-//        assert (Files.exists(parquetC));
-//
-//        assertConvertedFile(dbfA, parquetA);
-//        assertConvertedFile(dbfB, parquetB);
-//        assertConvertedFile(dbfC, parquetC);
-//    }
-//
-//    @Test
-//    void convertDirectoryCombiningTest() throws IOException {
-//        Path directoryTestDir = Files.createDirectory(testDir.resolve("directoryCombining"));
-//        Path directoryTestResourcesPath = Path.of(TestUtils.getResourcePath("dbf/conversion/directoryCombining"));
-//        try (Stream<Path> files = Files.list(directoryTestResourcesPath)) {
-//            for (Path filePath : files.toList()) {
-//                Files.copy(filePath, directoryTestDir.resolve(filePath.getFileName()));
-//            }
-//        }
-//
-//        Path parquetFile = directoryTestDir.resolve("combined.parquet");
-//        DbfParquet dbfParquet = new DbfParquetCustomReaders(DbfParquet.builder()
-//                .addConvertItem(
-//                        ConvertTask.builder()
-//                                .input(directoryTestDir)
-//                                .output(parquetFile)
-//                                .combineFiles()
-//                                .build()));
-//        dbfParquet.convert();
-//
-//        Configuration config = new Configuration();
-//        org.apache.hadoop.fs.Path hadoopPath = new org.apache.hadoop.fs.Path(parquetFile.toString());
-//        InputFile hadoopInputFile = HadoopInputFile.fromPath(hadoopPath, config);
-//
-//        try(ParquetReader<Row> parquetReader = RowParquetReader.builder(hadoopInputFile).build()) {
-//            List<InternalDbfReader> readers = DbfParquetCustomReaders.createReadersCombined(directoryTestDir);
-//            for(InternalDbfReader dbfReader : readers) {
-//                assertConvertedFile(dbfReader, parquetReader);
-//            }
-//        }
-//    }
 
 
+    @Test
+    void convertDirectoryToFileTest() throws IOException {
+        Path directoryTestDir = Files.createDirectory(testDir.resolve("directory"));
+        Path directoryTestResourcesPath = Path.of(TestUtils.getResourcePath("dbf/conversion/directory"));
+        try (Stream<Path> files = Files.list(directoryTestResourcesPath)) {
+            for (Path filePath : files.collect(Collectors.toList())) {
+                Files.copy(filePath, directoryTestDir.resolve(filePath.getFileName()));
+            }
+        }
+
+        DbfParquet dbfParquet = DbfParquet.builder().build();
+        dbfParquet.convert(directoryTestDir);
+
+        assert (Files.exists(directoryTestDir.resolve("CIHAAM1104.dbc")));
+        assert (Files.exists(directoryTestDir.resolve("HBRS2104.dbc")));
+        assert (Files.exists(directoryTestDir.resolve("SRMS1205.dbc")));
+
+        Path dbfA = directoryTestDir.resolve("CIHAAM1104.dbc.dbf");
+        Path dbfB = directoryTestDir.resolve("HBRS2104.dbc.dbf");
+        Path dbfC = directoryTestDir.resolve("SRMS1205.dbc.dbf");
+
+        assert (Files.exists(dbfA));
+        assert (Files.exists(dbfB));
+        assert (Files.exists(dbfC));
+
+        Path parquetA = directoryTestDir.resolve("CIHAAM1104.dbc.parquet");
+        Path parquetB = directoryTestDir.resolve("HBRS2104.dbc.parquet");
+        Path parquetC = directoryTestDir.resolve("SRMS1205.dbc.parquet");
+
+        assert (Files.exists(parquetA));
+        assert (Files.exists(parquetB));
+        assert (Files.exists(parquetC));
+
+        assertConvertedFile(dbfA, parquetA);
+        assertConvertedFile(dbfB, parquetB);
+        assertConvertedFile(dbfC, parquetC);
+    }
+
+    @Test
+    void convertDirectoryCombiningTest() throws IOException {
+        Path directoryTestDir = Files.createDirectory(testDir.resolve("directoryCombining"));
+        Path directoryTestResourcesPath = Path.of(TestUtils.getResourcePath("dbf/conversion/directoryCombining"));
+        try (Stream<Path> files = Files.list(directoryTestResourcesPath)) {
+            for (Path filePath : files.collect(Collectors.toList())) {
+                Files.copy(filePath, directoryTestDir.resolve(filePath.getFileName()));
+            }
+        }
+
+        Path parquetFile = directoryTestDir.resolve("combined.parquet");
+        DbfParquet dbfParquet = new DbfParquetCustomReaders(DbfParquet.builder()
+                .addConvertItem(
+                        ConvertTask.builder()
+                                .input(directoryTestDir)
+                                .output(parquetFile)
+                                .combineFiles()
+                                .build()));
+        dbfParquet.convert();
+
+        Configuration config = new Configuration();
+        org.apache.hadoop.fs.Path hadoopPath = new org.apache.hadoop.fs.Path(parquetFile.toString());
+        InputFile hadoopInputFile = HadoopInputFile.fromPath(hadoopPath, config);
+
+        try(ParquetReader<Row> parquetReader = RowParquetReader.builder(hadoopInputFile).build()) {
+            List<InternalDbfReader> readers = DbfParquetCustomReaders.createReadersCombined(directoryTestDir);
+            for(InternalDbfReader dbfReader : readers) {
+                assertConvertedFile(dbfReader, parquetReader);
+            }
+        }
+    }
 
     private void assertConvertedFile(Path dbfFile, Path parquetFile) throws IOException {
         Configuration config = new Configuration();
