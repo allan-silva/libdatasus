@@ -6,7 +6,7 @@
     <parent>
         <groupId>br.dev.contrib.gov.sus.opendata</groupId>
         <artifactId>libdatasus</artifactId>
-        <version>1.0.5</version>
+        <version>1.0.7</version>
     </parent>
 
     <artifactId>libdatasus-parquet-dbf</artifactId>
@@ -75,6 +75,17 @@
             <artifactId>parquet-io-java</artifactId>
             <version>2.0.4</version>
             <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>2.22.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>2.22.1</version>
         </dependency>
     </dependencies>
 

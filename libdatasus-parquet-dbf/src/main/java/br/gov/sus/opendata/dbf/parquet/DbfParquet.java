@@ -19,8 +19,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.parquet.column.ParquetProperties.WriterVersion;
 import org.apache.parquet.hadoop.ParquetWriter;
+import org.apache.parquet.hadoop.util.HadoopOutputFile;
 
 /**
  * {@link DbfParquet} converts a DBC/DBF file to parquet file.
@@ -32,7 +37,12 @@ public class DbfParquet {
 
     private final Consumer<Object> onProgress;
 
+    private static final Logger logger = LogManager.getLogger(DbfParquet.class);
+
+    private final Configuration conf;
+
     DbfParquet(Builder builder) {
+        this.conf = builder.conf;
         this.convertTasks = builder.convertTasks;
         this.onProgress = Optional.ofNullable(builder.onProgress).orElse(this::logProgress);
     }
@@ -197,15 +207,30 @@ public class DbfParquet {
     }
 
     private void convertFile(Path input, Path output, String schemaName) throws IOException {
+        logger.info(String.format("File conversion started - %s => %s", input.toUri(), output.toUri()));
         try (InputStream inputStream = getInputStream(input);
              InternalDbfReader dbfReader = new InternalDbfReader(inputStream, schemaName);
              ParquetWriter<DBFRow> parquetWriter =
-                     DbfParquetWriter.builder(getOutputPath(input, output).toString())
+                     DbfParquetWriter.builder(getOutputFile(input, output))
                              .withDbfSchema(dbfReader.schema)
                              .withWriterVersion(WriterVersion.PARQUET_2_0)
                              .build()) {
             write(dbfReader, parquetWriter);
         }
+    }
+
+    private HadoopOutputFile getOutputFile(Path input, Path output) throws IOException {
+        org.apache.hadoop.fs.Path hadoopPath =
+                new org.apache.hadoop.fs.Path(getOutputPath(input, output).toUri());
+        Configuration hadoopConf = this.conf != null ? this.conf : new Configuration();
+        FileSystem hadoopFS = hadoopPath.getFileSystem(hadoopConf);
+
+        if(hadoopFS != null)
+            logger.info(String.format("Hadoop output FS: %s", hadoopPath.getFileSystem(hadoopConf).getUri()));
+        else
+            logger.warn("Null Hadoop FS");
+
+        return HadoopOutputFile.fromPath(hadoopPath, hadoopConf);
     }
 
     private Path getOutputPath(Path input, Path output) {
@@ -217,10 +242,13 @@ public class DbfParquet {
 
     private InputStream getInputStream(Path input) throws IOException {
         if (isCompressed(input)) {
+            logger.info(String.format("File %s is compressed. Decompressing...", input.toUri()));
             Path inputFilePath = Paths.get(DbcNativeDecompressor.decompress(input).getOutputFileName());
+            logger.info(String.format("Decompressed file: %s", inputFilePath.toUri()));
             inputFilePath.toFile().deleteOnExit();
             return Files.newInputStream(inputFilePath);
         }
+        logger.info(String.format("File %s is not compressed", input.toUri()));
         return Files.newInputStream(input);
     }
 
@@ -230,11 +258,15 @@ public class DbfParquet {
         DBFRow dbfRow = nextRow(dbfReader);
         int rowCount = 0;
 
+        logger.info("Writing started");
+
         while (dbfRow != null) {
             parquetWriter.write(dbfRow);
             ++rowCount;
             dbfRow = nextRow(dbfReader);
         }
+
+        logger.info(String.format("Write finished - %s row(s) converted", rowCount));
     }
 
     private DBFRow nextRow(InternalDbfReader dbfReader) {
@@ -267,6 +299,8 @@ public class DbfParquet {
 
     public static class Builder {
 
+        private Configuration conf;
+
         private final Set<ConvertTask> convertTasks = new HashSet<>();
 
         private Consumer<Object> onProgress;
@@ -296,6 +330,11 @@ public class DbfParquet {
 
         public Builder onProgress(Consumer<Object> onProgress) {
             this.onProgress = onProgress;
+            return this;
+        }
+
+        public Builder withHadoopConf(Configuration conf) {
+            this.conf = conf;
             return this;
         }
 

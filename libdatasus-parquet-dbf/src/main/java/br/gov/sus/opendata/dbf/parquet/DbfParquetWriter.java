@@ -83,6 +83,11 @@ public class DbfParquetWriter extends ParquetWriter<DBFRow> {
     }
 
     @Override
+    public Builder withConf(Configuration conf) {
+      return super.withConf(conf);
+    }
+
+    @Override
     protected WriteSupport<DBFRow> getWriteSupport(Configuration configuration) {
       return new DbfRowWriteSupport(dbfSchema, extraMetaData);
     }

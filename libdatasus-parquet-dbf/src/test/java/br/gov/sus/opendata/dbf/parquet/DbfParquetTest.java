@@ -48,24 +48,25 @@ class DbfParquetTest {
         recursiveDeleteDirectory(testDir.toFile());
     }
 
-//    @ParameterizedTest
-//    @MethodSource("datasusFilesSource")
-//    void convertFileToFileTest(Path inputPathItem) throws IOException {
-//        Path copyTarget = testDir.resolve(inputPathItem.getFileName());
-//        Path inputFile = Files.copy(inputPathItem, copyTarget, StandardCopyOption.REPLACE_EXISTING);
-//
-//        DbfParquet dbfParquet = DbfParquet.builder().build();
-//        dbfParquet.convert(inputFile);
-//
-//        Path dbfFile = dbfFilePath(inputFile);
-//        assertTrue(Files.exists(dbfFile));
-//
-//        Path parquetFile = Path.of(inputFile.toString() + ".parquet");
-//        assertTrue(Files.exists(parquetFile));
-//
-//        assertConvertedFile(dbfFile, parquetFile);
-//    }
-//
+    @ParameterizedTest
+    @MethodSource("datasusFilesSource")
+    void convertFileToFileTest(Path inputPathItem) throws IOException {
+        Path copyTarget = testDir.resolve(inputPathItem.getFileName());
+        Path inputFile = Files.copy(inputPathItem, copyTarget, StandardCopyOption.REPLACE_EXISTING);
+
+        DbfParquet dbfParquet = DbfParquet.builder().build();
+        dbfParquet.convert(inputFile);
+
+        Path dbfFile = dbfFilePath(inputFile);
+        assertTrue(Files.exists(dbfFile));
+
+        Path parquetFile = Path.of(inputFile.toString() + ".parquet");
+        assertTrue(Files.exists(parquetFile));
+
+        assertConvertedFile(dbfFile, parquetFile);
+    }
+
+
     @Test
     void convertFileToDirectoryTest() throws IOException {
         Path output = Files.createDirectory(testDir.resolve("output"));
