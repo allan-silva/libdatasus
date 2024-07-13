@@ -99,6 +99,112 @@ Decompress size: 109338624
 
 ```
 
+## Convertendo arquivos DBC ou DBF para o formato parquet
+
+### Dependência
+
+```
+        <dependency>
+            <groupId>br.dev.contrib.gov.sus.opendata</groupId>
+            <artifactId>libdatasus-parquet-dbf</artifactId>
+            <version>1.0.7</version>
+        </dependency>
+```
+### Dependência do ambiente de Runtime
+
+Libdatasus é contruída com base no [Apache Parquet MR](https://github.com/apache/parquet-java), é necessário especificar a dependêcia do Hadoop.
+Na máquina local, especificar a dependência é o suficiente, em ambientes gerenciados de cloud como o Dataproc, a dependencia é fornecida pelo ambiente.
+```
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+            <version>3.4.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-mapreduce-client-core</artifactId>
+            <version>3.4.0</version>
+        </dependency>
+```
+
+Uma alternativa é fornecer a dependência do Spark.
+```
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-core_2.13</artifactId>
+            <version>3.5.0</version>
+        </dependency>
+```
+
+### Convertendo um arquivo
+
+```
+import br.gov.sus.opendata.dbf.parquet.DbfParquet;
+
+...
+
+Path dbcPath = Path.of("/tmp/dbc/CIHASP1608.dbc");
+DbfParquet dbfParquet = DbfParquet.builder().build();
+dbfParquet.convert(dbcPath);
+
+```
+
+O arquivo convertido estará presente no mesmo diretório que o arquivo DBC/DBF, com a extensão `*.parquet`, para o exemplo acima, o arquivo gerado é `CIHASP1608.dbc.parquet`
+
+### Convertendo um arquivo para um destino específico
+
+```
+Path dbcPath = Path.of("/tmp/dbc/CIHASP1608.dbc");
+Path parquetPath = Path.of("/tmp/dbc/CIHASP1608-converted.parquet");
+DbfParquet dbfParquet = DbfParquet.builder().build();
+dbfParquet.convert(dbcPath, parquetPath);
+```
+
+### Convertendo e combinando arquivos DBC/DBF em um único arquivo parquet
+
+Muitas informações disseminadas pelos sistemas do DATASUS são divididas por competência, a partir de um diretório contendo uma lista de arquivos de mesmo domínio, é possível combiná-los em um único arquivo parquet.
+
+Lista de arquivos:
+```
+allan@fedora:~$ ls -1 /tmp/dbc/
+CIHAAC1109.dbc
+CIHAAC1112.dbc
+CIHAAC1201.dbc
+CIHAAL1203.dbc
+CIHAMG2004.dbc
+CIHASP2307.dbc
+```
+
+```Java
+        Path dbcDirectoryPath = Path.of("/tmp/dbc/");
+        Path parquetOutput = Path.of("/tmp/dbc/CIHA-combined.parquet");
+        ConvertTask convertCIHAfiles = ConvertTask
+                .builder()
+                .input(dbcDirectoryPath)
+                .output(parquetOutput)
+                .combineFiles()
+                .build();
+        DbfParquet dbfParquet = DbfParquet
+                .builder()
+                .addConvertItem(convertCIHAfiles)
+                .build();
+        dbfParquet.convert();
+```
+
+Resultado da conversão:
+```
+allan@fedora:~$ ls -1 /tmp/dbc/
+CIHAAC1109.dbc
+CIHAAC1112.dbc
+CIHAAC1201.dbc
+CIHAAL1203.dbc
+CIHA-combined.parquet
+CIHAMG2004.dbc
+CIHASP2307.dbc
+
+```
+
 
 # Dependências de software relacionada com os formatos DBC/DBF
 
