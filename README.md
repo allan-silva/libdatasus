@@ -1,8 +1,6 @@
 # libdatasus
 Biblioteca para conversão de arquivos DBF para o formato parquet.
 
-[Esse projeto faz parte do TCC do curso de pós graduação em Engenharia de Dados da PUC Minas (2022).](https://github.com/allan-silva/DE-puc-tcc)
-
 # Uso
 
 ## Descompressão de arquivos DBC
