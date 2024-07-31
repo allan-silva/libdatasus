@@ -204,7 +204,7 @@ CIHASP2307.dbc
 ```
 
 
-# Dependências de software relacionada com os formatos DBC/DBF
+# Dependências de software relacionadas com os formatos DBC/DBF
 
 Descompressor de arquivos DBC baseado no trabalho de Mark Adler <madler@alumni.caltech.edu> (zlib), Daniela Petruzalek ([blast-dbf](https://github.com/eaglebh/blast-dbf)) e Pablo Fonseca ([blast-dbf](https://github.com/eaglebh/blast-dbf)).
 
